@@ -1,69 +1,54 @@
 pipeline {
-  agent any
 
-//   tools {
-//     terraform 'Terraform' // This should match the name in "Global Tool Configuration"
-//   }
+    parameters {
+        booleanParam(name: 'autoApprove', defaultValue: false, description: 'Automatically run apply after generating plan?')
+    } 
+    // environment {
+    //     AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
+    //     AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
+    // }
 
-  environment {
-    AWS_REGION = 'us-east-1'
-    // Uncomment below if using credentials instead of instance profile or EC2 IAM role
-    // AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')
-    // AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
-  }
+   agent  any
+    stages {
+        stage('checkout') {
+            steps {
+                 script{
+                        dir("terraform")
+                        {
+                            git 'https://github.com/vishalsharma820/glue-jobs-prama.git'
+                        }
+                    }
+                }
+            }
 
-  stages {
-    stage('Checkout') {
-      steps {
-        git url: 'https://github.com/vishalsharma820/glue-jobs-prama.git'
-      }
-    }
-
-    stage('Setup Terraform') {
-      steps {
-        script {
-          def tfHome = tool name: 'Terraform', type: 'TerraformInstallation'
-          env.PATH = "${tfHome}:${env.PATH}"
+        stage('Plan') {
+            steps {
+                sh 'pwd;cd terraform/ ; terraform init'
+                sh "pwd;cd terraform/ ; terraform plan -out tfplan"
+                sh 'pwd;cd terraform/ ; terraform show -no-color tfplan > tfplan.txt'
+            }
         }
-        sh 'terraform version' // Verify Terraform is accessible
-      }
+        stage('Approval') {
+           when {
+               not {
+                   equals expected: true, actual: params.autoApprove
+               }
+           }
+
+           steps {
+               script {
+                    def plan = readFile 'terraform/tfplan.txt'
+                    input message: "Do you want to apply the plan?",
+                    parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
+               }
+           }
+       }
+
+        stage('Apply') {
+            steps {
+                sh "pwd;cd terraform/ ; terraform apply -input=false tfplan"
+            }
+        }
     }
 
-    stage('Terraform Init') {
-      steps {
-        sh 'terraform init'
-      }
-    }
-
-    stage('Terraform Validate') {
-      steps {
-        sh 'terraform validate'
-      }
-    }
-
-    stage('Terraform Plan') {
-      steps {
-        sh 'terraform plan -out=tfplan'
-      }
-    }
-
-    stage('Terraform Apply') {
-      when {
-        branch 'main'
-      }
-      steps {
-        input message: 'Approve to apply Terraform changes?'
-        sh 'terraform apply -auto-approve tfplan'
-      }
-    }
   }
-
-  post {
-    failure {
-      echo '❌ Build failed'
-    }
-    success {
-      echo '✅ Terraform applied successfully'
-    }
-  }
-}
