@@ -1,9 +1,9 @@
 pipeline {
   agent any
 
-  tools {
-    terraform 'Terraform' // This should match the name in "Global Tool Configuration"
-  }
+//   tools {
+//     terraform 'Terraform' // This should match the name in "Global Tool Configuration"
+//   }
 
   environment {
     AWS_REGION = 'us-east-1'
