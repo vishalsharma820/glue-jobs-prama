@@ -1,11 +1,13 @@
 pipeline {
   agent any
+
   tools {
-        terraform 'Terraform'  // Name from Global Tool Configuration
-    }
+    terraform 'Terraform' // This should match the name in "Global Tool Configuration"
+  }
+
   environment {
     AWS_REGION = 'us-east-1'
-    // Uncomment if you use credentials instead of EC2 role
+    // Uncomment below if using credentials instead of instance profile or EC2 IAM role
     // AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')
     // AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
   }
@@ -14,6 +16,16 @@ pipeline {
     stage('Checkout') {
       steps {
         git url: 'https://github.com/vishalsharma820/glue-jobs-prama.git'
+      }
+    }
+
+    stage('Setup Terraform') {
+      steps {
+        script {
+          def tfHome = tool name: 'Terraform', type: 'TerraformInstallation'
+          env.PATH = "${tfHome}:${env.PATH}"
+        }
+        sh 'terraform version' // Verify Terraform is accessible
       }
     }
 
