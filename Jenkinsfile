@@ -1,7 +1,7 @@
 pipeline {
   agent any
   tools {
-        terraform 'Terraform-1.6.6'  // Name from Global Tool Configuration
+        terraform 'Terraform-1.11.4'  // Name from Global Tool Configuration
     }
   environment {
     AWS_REGION = 'us-east-1'
