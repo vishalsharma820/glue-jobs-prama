@@ -17,11 +17,16 @@ resource "aws_iam_role" "glue_role" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "glue_attach" {
-  role       = aws_iam_role.glue_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
-}
+# resource "aws_iam_role_policy_attachment" "glue_attach" {
+#   role       = aws_iam_role.glue_role.name
+#   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+# }
 
+# Attach only your existing custom policy for Glue + S3 access
+resource "aws_iam_role_policy_attachment" "glue_custom_policy_attach" {
+  role       = aws_iam_role.glue_role.name
+  policy_arn = "arn:aws:iam::165446266030:policy/Legacy-Glue-Policy-test" # Replace with actual values
+}
 resource "aws_glue_job" "jenkins_job" {
   name     = "jenkins-glue-job"
   role_arn = aws_iam_role.glue_role.arn
