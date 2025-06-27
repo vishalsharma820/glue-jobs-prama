@@ -3,9 +3,9 @@ variable "region" {
 }
 
 variable "s3_bucket" {
-  default = "your-bucket-name"
+  default = "vs-glue-test-job"
 }
 
 variable "script_key" {
-  default = "glue-scripts/my_job.py"
+  default = "glue-scripts/myjob.py"
 }
