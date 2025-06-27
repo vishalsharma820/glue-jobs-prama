@@ -1,56 +1,50 @@
 pipeline {
   agent any
 
-  environment {
-    AWS_REGION = 'us-east-1' // replace with your region or use a Jenkins parameter
+  parameters {
+    booleanParam(name: 'autoApprove', defaultValue: false, description: 'Automatically run apply after generating plan?')
   }
 
-  options {
-    timestamps()
+  environment {
+    AWS_DEFAULT_REGION = 'us-east-1'
   }
 
   stages {
-    stage('Checkout Code') {
+    stage('Checkout') {
       steps {
-        checkout scm
+        git 'https://github.com/vishalsharma820/glue-jobs-prama.git'
       }
     }
 
-    stage('Terraform Init') {
+    stage('Terraform Init & Plan') {
       steps {
-        sh '''
-          terraform init
-        '''
-      }
-    }
-
-    stage('Terraform Plan') {
-      steps {
-        sh '''
-          terraform plan -out=tfplan
-        '''
+        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Prama-sandbox']]) {
+          sh '''
+            terraform init
+            terraform plan -out=tfplan
+          '''
+        }
       }
     }
 
     stage('Terraform Apply') {
       when {
-        branch 'main' // restrict apply only to main branch
+        expression { return params.autoApprove }
       }
       steps {
-        input message: 'Approve Terraform Apply?'
-        sh '''
-          terraform apply -auto-approve tfplan
-        '''
+        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Prama-sandbox']]) {
+          sh 'terraform apply -auto-approve tfplan'
+        }
       }
     }
   }
 
   post {
-    failure {
-      echo 'Terraform deployment failed.'
-    }
     success {
-      echo 'Terraform deployment completed.'
+      echo "✅ Deployment succeeded"
+    }
+    failure {
+      echo "❌ Deployment failed"
     }
   }
 }
