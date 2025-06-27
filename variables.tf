@@ -3,6 +3,7 @@ variable "region" {
 }
 
 variable "s3_bucket" {
+  # default = "vs-glue-test-job"
   default = "vs-glue-test-job"
 }
 

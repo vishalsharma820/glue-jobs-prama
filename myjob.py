@@ -12,7 +12,7 @@ spark = glueContext.spark_session
 job = Job(glueContext)
 job.init(args['JOB_NAME'], args)
 
-df = spark.createDataFrame([("Vishal", 422), ("Jignesh", 138)], ["name", "age"])
+df = spark.createDataFrame([("Vishal", 382), ("Jignesh", 148)], ["name", "age"])
 df.show()
 
 job.commit()
