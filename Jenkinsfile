@@ -2,54 +2,55 @@ pipeline {
   agent any
 
   environment {
-    AWS_REGION = 'us-east-1'
-    S3_BUCKET  = 'your-bucket-name'
-    SCRIPT_KEY = 'glue-scripts/my_job.py'
+    AWS_REGION = 'us-east-1' // replace with your region or use a Jenkins parameter
+  }
+
+  options {
+    timestamps()
   }
 
   stages {
-
-    stage('Checkout') {
+    stage('Checkout Code') {
       steps {
-        git 'https://github.com/your-repo/aws-glue-job.git'
-      }
-    }
-
-    stage('Upload Glue Script to S3') {
-      steps {
-        withAWS(region: "${env.AWS_REGION}", credentials: 'aws-creds') {
-          sh "aws s3 cp my_job.py s3://${S3_BUCKET}/${SCRIPT_KEY}"
-        }
+        checkout scm
       }
     }
 
     stage('Terraform Init') {
       steps {
-        sh 'terraform init'
+        sh '''
+          terraform init
+        '''
       }
     }
 
     stage('Terraform Plan') {
       steps {
-        sh 'terraform plan'
+        sh '''
+          terraform plan -out=tfplan
+        '''
       }
     }
 
-    stage('Terraform Apply - Deploy Glue Job') {
+    stage('Terraform Apply') {
+      when {
+        branch 'main' // restrict apply only to main branch
+      }
       steps {
-        input message: "Approve Terraform Apply?"
-        sh 'terraform apply -auto-approve'
+        input message: 'Approve Terraform Apply?'
+        sh '''
+          terraform apply -auto-approve tfplan
+        '''
       }
     }
-
   }
 
   post {
-    success {
-      echo 'Glue Job Created Successfully!'
-    }
     failure {
-      echo 'Pipeline Failed.'
+      echo 'Terraform deployment failed.'
+    }
+    success {
+      echo 'Terraform deployment completed.'
     }
   }
 }
