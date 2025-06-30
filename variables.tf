@@ -1,12 +1,15 @@
 variable "region" {
-  default = "us-east-1"
+  description = "AWS region"
+  type        = string
+  default     = "us-east-1"
 }
 
 variable "s3_bucket" {
-  # default = "vs-glue-test-job"
-  default = "vs-glue-test-job"
+  description = "S3 bucket for Glue script"
+  type        = string
 }
 
 variable "script_key" {
-  default = "glue-scripts/myjob.py"
+  description = "S3 key for the Glue script"
+  type        = string
 }
