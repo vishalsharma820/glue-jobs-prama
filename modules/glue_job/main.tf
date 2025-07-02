@@ -21,3 +21,10 @@ resource "aws_glue_job" "this" {
     "--enable-metrics"                   = "true"
   }
 }
+
+resource "aws_s3_object" "glue_script" {
+  bucket = var.s3_bucket
+  key    = var.script_key
+  source = var.script_local_path
+  etag   = filemd5(var.script_local_path)
+}

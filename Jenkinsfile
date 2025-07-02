@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   parameters {
-    booleanParam(name: 'autoApprove', defaultValue: false, description: 'Automatically run apply after generating plan?')
+    booleanParam(name: 'autoApprove', defaultValue: false, description: 'Apply infrastructure changes automatically?')
   }
 
   environment {
@@ -16,24 +16,30 @@ pipeline {
       }
     }
 
-    stage('Terraform Init & Plan') {
+    stage('Terragrunt Init & Plan') {
       steps {
-        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Prama-sandbox']]) {
-          sh '''
-            terraform init
-            terraform plan -out=tfplan
-          '''
+        dir('envs/dev') {
+          withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Prama-sandbox']]) {
+            sh '''
+              terragrunt run-all init
+              terragrunt run-all plan -out=planfile
+            '''
+          }
         }
       }
     }
 
-    stage('Terraform Apply') {
+    stage('Terragrunt Apply') {
       when {
         expression { return params.autoApprove }
       }
       steps {
-        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Prama-sandbox']]) {
-          sh 'terraform apply -auto-approve tfplan'
+        dir('envs/dev') {
+          withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Prama-sandbox']]) {
+            sh '''
+              terragrunt run-all apply --terragrunt-non-interactive
+            '''
+          }
         }
       }
     }
