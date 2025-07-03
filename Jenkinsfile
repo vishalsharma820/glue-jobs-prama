@@ -1,5 +1,10 @@
 pipeline {
-  agent any
+  agent {
+    docker {
+      image 'alpine/terragrunt:latest' // Or use your custom image with terraform + terragrunt
+      args '-v $HOME/.aws:/root/.aws'  // Optional: Mount AWS credentials if needed
+    }
+  }
 
   parameters {
     booleanParam(name: 'autoApprove', defaultValue: false, description: 'Apply infrastructure changes automatically?')
@@ -22,7 +27,7 @@ pipeline {
           withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Prama-sandbox']]) {
             sh '''
               terragrunt run-all init
-              terragrunt run-all plan -out=planfile
+              terragrunt run-all plan
             '''
           }
         }
@@ -37,7 +42,7 @@ pipeline {
         dir('envs/dev') {
           withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Prama-sandbox']]) {
             sh '''
-              terragrunt run-all apply --terragrunt-non-interactive
+              terragrunt run-all apply --terragrunt-non-interactive --terragrunt-include-external-dependencies
             '''
           }
         }
