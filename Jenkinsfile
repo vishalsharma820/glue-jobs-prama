@@ -12,7 +12,7 @@ pipeline {
   stages {
     stage('Checkout') {
       steps {
-        git 'https://github.com/vishalsharma820/glue-jobs-prama.git'
+        checkout scm
       }
     }
 
@@ -21,7 +21,7 @@ pipeline {
         dir('envs/dev') {
           withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Prama-sandbox']]) {
             sh '''
-              terragrunt run-all init
+              terragrunt run-all init --terragrunt-non-interactive
               terragrunt run-all plan -out=planfile
             '''
           }
