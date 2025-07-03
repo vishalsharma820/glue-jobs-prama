@@ -18,16 +18,12 @@ pipeline {
 
     stage('Terragrunt Init & Plan') {
       steps {
-        script {
-          docker.image('alpine/terragrunt:latest').inside {
-            dir('envs/dev') {
-              withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Prama-sandbox']]) {
-                sh '''
-                  terragrunt run-all init
-                  terragrunt run-all plan -out=planfile
-                '''
-              }
-            }
+        dir('envs/dev') {
+          withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Prama-sandbox']]) {
+            sh '''
+              terragrunt run-all init
+              terragrunt run-all plan -out=planfile
+            '''
           }
         }
       }
@@ -38,15 +34,11 @@ pipeline {
         expression { return params.autoApprove }
       }
       steps {
-        script {
-          docker.image('alpine/terragrunt:latest').inside {
-            dir('envs/dev') {
-              withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Prama-sandbox']]) {
-                sh '''
-                  terragrunt run-all apply --terragrunt-non-interactive
-                '''
-              }
-            }
+        dir('envs/dev') {
+          withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Prama-sandbox']]) {
+            sh '''
+              terragrunt run-all apply --terragrunt-non-interactive
+            '''
           }
         }
       }
