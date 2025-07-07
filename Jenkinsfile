@@ -7,6 +7,8 @@ pipeline {
 
   environment {
     AWS_DEFAULT_REGION = 'us-east-1'
+    TF_VERSION = '0.13.6'
+    TF_BIN = "${WORKSPACE}/terraform"
   }
 
   stages {
@@ -16,12 +18,24 @@ pipeline {
       }
     }
 
+    stage('Install Terraform v0.13.6') {
+      steps {
+        sh '''
+          echo "Downloading Terraform ${TF_VERSION}..."
+          curl -s -o terraform.zip https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
+          unzip -o terraform.zip -d .
+          chmod +x terraform
+        '''
+      }
+    }
+
     stage('Terraform Init & Plan') {
       steps {
         withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Prama-sandbox']]) {
           sh '''
-            terraform init
-            terraform plan -out=tfplan
+            ${TF_BIN} version
+            ${TF_BIN} init
+            ${TF_BIN} plan -out=tfplan
           '''
         }
       }
@@ -33,7 +47,7 @@ pipeline {
       }
       steps {
         withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Prama-sandbox']]) {
-          sh 'terraform apply -auto-approve tfplan'
+          sh '${TF_BIN} apply -auto-approve tfplan'
         }
       }
     }
