@@ -35,7 +35,7 @@ pipeline {
                         dir("envs/dev/${module}") {
                             sh """
                             echo "Running Terragrunt in \$(pwd)..."
-                            ${TERRAGRUNT_BIN} init -backend=true
+                            ${TERRAGRUNT_BIN} init -reconfigure -backend=true
                             ${TERRAGRUNT_BIN} apply -auto-approve
                             """
                         }
