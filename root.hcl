@@ -1,3 +1,38 @@
+# locals {
+#   region     = "us-east-1"
+#   s3_bucket  = "vs-glue-test-job"
+#   job_name   = basename(path_relative_to_include())
+# }
+
+# remote_state {
+#   backend = "s3"
+#   config = {
+#     bucket         = "glue-testjobjekins-state-bucket"
+#     key            = "glue-job/${local.job_name}/terraform.tfstate"
+#     region         = local.region
+#     encrypt        = true
+#     dynamodb_table = "terraform-lock-table"
+#   }
+# }
+
+# generate "provider" {
+#   path      = "provider.tf"
+#   if_exists = "overwrite_terragrunt"
+#   contents  = <<EOF
+# terraform {
+#   required_providers {
+#     aws = {
+#       source  = "hashicorp/aws"
+#       version = "~> 3.38.0"
+#     }
+#   }
+# }
+
+# provider "aws" {
+#   region = "${local.region}"
+# }
+# EOF
+# }
 locals {
   region     = "us-east-1"
   s3_bucket  = "vs-glue-test-job"

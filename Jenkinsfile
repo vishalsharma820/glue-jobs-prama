@@ -1,56 +1,47 @@
 pipeline {
-  agent any
+    agent any
 
-  parameters {
-    booleanParam(name: 'autoApprove', defaultValue: false, description: 'Apply infrastructure changes automatically?')
-  }
-
-  environment {
-    AWS_DEFAULT_REGION = 'us-east-1'
-  }
-
-  stages {
-    stage('Checkout') {
-      steps {
-        checkout scm
-      }
+    environment {
+        TERRAFORM_VERSION = '0.13.6'
+        TERRAGRUNT_VERSION = '0.27.1'
+        TERRAFORM_BIN = "${WORKSPACE}/terraform"
+        TERRAGRUNT_BIN = "${WORKSPACE}/terragrunt"
+        MODULES = 'iam-role glue-job-a glue-job-b'
     }
 
-    stage('Terragrunt Init & Plan') {
-      steps {
-        dir('envs/dev') {
-          withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Prama-sandbox']]) {
-            sh '''
-              terragrunt run-all init --terragrunt-non-interactive
-              terragrunt run-all plan -out=planfile
-            '''
-          }
+    stages {
+        stage('Install Terraform & Terragrunt') {
+            steps {
+                sh '''
+                echo "Installing Terraform v$TERRAFORM_VERSION..."
+                curl -L -o terraform.zip https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+                unzip -o terraform.zip -d .
+                chmod +x terraform
+                ./terraform --version
+
+                echo "Installing Terragrunt v$TERRAGRUNT_VERSION..."
+                curl -L -o terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_amd64
+                chmod +x terragrunt
+                ./terragrunt --version
+                '''
+            }
         }
-      }
-    }
 
-    stage('Terragrunt Apply') {
-      when {
-        expression { return params.autoApprove }
-      }
-      steps {
-        dir('envs/dev') {
-          withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Prama-sandbox']]) {
-            sh '''
-              terragrunt run-all apply --terragrunt-non-interactive
-            '''
-          }
+        stage('Terraform Apply per Module') {
+            steps {
+                script {
+                    def modules = env.MODULES.split()
+                    modules.each { module ->
+                        dir("envs/dev/${module}") {
+                            sh """
+                            echo "Running Terragrunt in \$(pwd)..."
+                            ${TERRAGRUNT_BIN} init -backend=true
+                            ${TERRAGRUNT_BIN} apply -auto-approve
+                            """
+                        }
+                    }
+                }
+            }
         }
-      }
     }
-  }
-
-  post {
-    success {
-      echo "✅ Deployment succeeded"
-    }
-    failure {
-      echo "❌ Deployment failed"
-    }
-  }
 }
