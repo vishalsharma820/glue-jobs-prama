@@ -33,11 +33,20 @@ pipeline {
                     def modules = env.MODULES.split()
                     modules.each { module ->
                         dir("envs/dev/${module}") {
-                            sh """
-                            echo "Running Terragrunt in \$(pwd)..."
-                            ${TERRAGRUNT_BIN} init -reconfigure -backend=true
-                            ${TERRAGRUNT_BIN} apply -auto-approve
-                            """
+                            sh '''
+                            echo "==============================================="
+                            echo "Running Terragrunt in $(pwd)..."
+
+                            echo "Cleaning Terragrunt cache if present..."
+                            rm -rf .terragrunt-cache || true
+
+                            echo "Initializing Terragrunt backend..."
+                            ''' + "${TERRAGRUNT_BIN} init -reconfigure -backend=true" + '''
+
+                            echo "Applying module: ${module}..."
+                            ''' + "${TERRAGRUNT_BIN} apply -auto-approve" + '''
+                            echo "==============================================="
+                            '''
                         }
                     }
                 }
