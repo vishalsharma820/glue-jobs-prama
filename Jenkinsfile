@@ -40,11 +40,14 @@ pipeline {
                             echo "Cleaning Terragrunt cache if present..."
                             rm -rf .terragrunt-cache || true
 
+                            echo "Adding local workspace bin to PATH..."
+                            export PATH=$WORKSPACE:$PATH
+
                             echo "Initializing Terragrunt backend..."
-                            ''' + "${TERRAGRUNT_BIN} init -reconfigure -backend=true" + '''
+                            terragrunt init -reconfigure -backend=true
 
                             echo "Applying module: ${module}..."
-                            ''' + "${TERRAGRUNT_BIN} apply -auto-approve" + '''
+                            terragrunt apply -auto-approve
                             echo "==============================================="
                             '''
                         }
