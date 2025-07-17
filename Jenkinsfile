@@ -6,7 +6,7 @@ pipeline {
         TERRAGRUNT_VERSION = '0.27.1'
         TERRAFORM_BIN = "${WORKSPACE}/terraform"
         TERRAGRUNT_BIN = "${WORKSPACE}/terragrunt"
-        MODULES = 'iam-role glue-job-a glue-job-b'
+        MODULES = 'iam-role glue-crawler glue-workflow glue-job-a glue-job-b glue-start-trigger glue-main-trigger'
     }
 
     stages {
@@ -27,7 +27,7 @@ pipeline {
             }
         }
 
-        stage('Terraform Apply per Module') {
+        stage('Terragrunt Plan per Module') {
             steps {
                 script {
                     def modules = env.MODULES.split()
@@ -35,19 +35,14 @@ pipeline {
                         dir("envs/dev/${module}") {
                             sh '''
                             echo "==============================================="
-                            echo "Running Terragrunt in $(pwd)..."
+                            echo "Running Terragrunt plan in $(pwd)..."
 
-                            echo "Cleaning Terragrunt cache if present..."
                             rm -rf .terragrunt-cache || true
-
-                            echo "Adding local workspace bin to PATH..."
                             export PATH=$WORKSPACE:$PATH
 
-                            echo "Initializing Terragrunt backend..."
-                            terragrunt init -reconfigure -backend=true
+                            terragrunt init -reconfigure
 
-                            echo "Applying module: ${module}..."
-                            terragrunt apply -auto-approve
+                            terragrunt plan
                             echo "==============================================="
                             '''
                         }
