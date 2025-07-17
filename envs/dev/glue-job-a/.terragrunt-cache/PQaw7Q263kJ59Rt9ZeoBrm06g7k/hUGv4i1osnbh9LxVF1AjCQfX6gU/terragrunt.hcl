@@ -13,7 +13,7 @@ locals {
 inputs = {
   job_name             = "titanic-data-transform"
   role_arn             = "arn:aws:iam::165446266030:role/jenkins-glue-role"
-  glue_version         = "5.0"
+  glue_version         = "4.0"
   number_of_workers    = 2
   worker_type          = "G.1X"
 

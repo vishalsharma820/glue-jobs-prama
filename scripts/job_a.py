@@ -5,7 +5,7 @@ from awsglue.utils import getResolvedOptions
 from awsglue.job import Job
 from awsglue.dynamicframe import DynamicFrame  # <-- Add this import
 
-# Get arguments vishal
+# Get arguments
 args = getResolvedOptions(sys.argv, ['JOB_NAME', 'SOURCE_DATABASE', 'SOURCE_TABLE', 'OUTPUT_PATH'])
 
 # Initialize contexts
