@@ -50,5 +50,27 @@ pipeline {
                 }
             }
         }
+
+        stage('Terragrunt Apply per Module') {
+            steps {
+                script {
+                    def modules = env.MODULES.split()
+                    modules.each { module ->
+                        dir("envs/dev/${module}") {
+                            sh '''
+                            echo "==============================================="
+                            echo "Running Terragrunt apply in $(pwd)..."
+
+                            rm -rf .terragrunt-cache || true
+                            export PATH=$WORKSPACE:$PATH
+
+                            terragrunt apply -auto-approve
+                            echo "==============================================="
+                            '''
+                        }
+                    }
+                }
+            }
+        }
     }
 }
