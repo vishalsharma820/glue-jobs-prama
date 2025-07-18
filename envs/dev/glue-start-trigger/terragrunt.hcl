@@ -33,7 +33,7 @@ inputs = {
 
   actions = [
     {
-      job_name = dependency.job_a.outputs.job_name  # ✅ fixed: referencing correct output key
+      job_name = dependency.job_a.outputs.name  # ✅ fixed: referencing correct output key
     }
   ]
 
