@@ -7,6 +7,7 @@ pipeline {
         TERRAFORM_BIN = "${WORKSPACE}/terraform"
         TERRAGRUNT_BIN = "${WORKSPACE}/terragrunt"
         MODULES = 'iam-role glue-crawler glue-workflow glue-job-a glue-job-b glue-start-trigger glue-main-trigger'
+        ENV = 'dev' // Change to 'stage' or 'prod' as needed
     }
 
     stages {
@@ -27,49 +28,30 @@ pipeline {
             }
         }
 
-        stage('Terragrunt Plan per Module') {
+        stage('Terragrunt Plan via Makefile') {
             steps {
-                script {
-                    def modules = env.MODULES.split()
-                    modules.each { module ->
-                        dir("deploy/envs/dev/${module}") {
-                            sh '''
-                            echo "==============================================="
-                            echo "Running Terragrunt plan in $(pwd)..."
+                dir('deploy') {
+                    sh '''
+                    echo "Updating PATH to include tools..."
+                    export PATH=$WORKSPACE:$PATH
 
-                            rm -rf .terragrunt-cache || true
-                            export PATH=$WORKSPACE:$PATH
-
-                            terragrunt init -reconfigure
-                            terragrunt plan
-
-                            echo "==============================================="
-                            '''
-                        }
-                    }
+                    echo "Running 'make plan' with ENV=${ENV} and MODULES=${MODULES}"
+                    make plan ENV=${ENV} MODULES="${MODULES}"
+                    '''
                 }
             }
         }
 
-        stage('Terragrunt Apply per Module') {
+        stage('Terragrunt Apply via Makefile') {
             steps {
-                script {
-                    def modules = env.MODULES.split()
-                    modules.each { module ->
-                        dir("deploy/envs/dev/${module}") {
-                            sh '''
-                            echo "==============================================="
-                            echo "Running Terragrunt apply in $(pwd)..."
+                dir('deploy') {
+                    sh '''
+                    echo "Updating PATH to include tools..."
+                    export PATH=$WORKSPACE:$PATH
 
-                            rm -rf .terragrunt-cache || true
-                            export PATH=$WORKSPACE:$PATH
-
-                            terragrunt apply -auto-approve
-
-                            echo "==============================================="
-                            '''
-                        }
-                    }
+                    echo "Running 'make deploy' with ENV=${ENV} and MODULES=${MODULES}"
+                    make deploy ENV=${ENV} MODULES="${MODULES}"
+                    '''
                 }
             }
         }
