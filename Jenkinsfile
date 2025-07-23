@@ -1,11 +1,6 @@
 pipeline {
     agent any
 
-    parameters {
-        string(name: 'ENV', defaultValue: 'dev', description: 'Environment to deploy to (e.g., dev, stage, prod)')
-        string(name: 'MODULES', defaultValue: 'iam-role glue-crawler glue-workflow glue-job-a glue-job-b glue-start-trigger glue-main-trigger', description: 'Modules to include (space-separated)')
-    }
-
     environment {
         TERRAFORM_VERSION = '0.13.6'
         TERRAGRUNT_VERSION = '0.27.1'
@@ -31,15 +26,15 @@ pipeline {
             }
         }
 
-        stage('Terragrunt Plan via Makefile') {
+        stage('Terragrunt Plan (All Modules)') {
             steps {
                 dir('deploy') {
                     sh '''
                     echo "Updating PATH to include tools..."
                     export PATH=$WORKSPACE:$PATH
 
-                    echo "Running 'make plan' in $ENV environment with modules: $MODULES"
-                    make plan ENV=$ENV MODULES="$MODULES"
+                    echo "Running 'make plan' for all modules in dev"
+                    make plan
                     '''
                 }
             }
