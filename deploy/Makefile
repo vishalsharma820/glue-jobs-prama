@@ -1,13 +1,13 @@
 .DEFAULT_GOAL := help
 
-# Auto-detect module folders under deploy/envs/dev/
-MODULES := $(shell find deploy/envs/dev -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
+# Auto-detect module folders under envs/dev/ (not deploy/envs/dev/)
+MODULES := $(shell find envs/dev -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
 
 # Plan all modules in dev
 plan:  ## Run terragrunt plan for each module in dev
 	@for module in $(MODULES); do \
 		echo "-> Planning $$module in dev..."; \
-		cd deploy/envs/dev/$$module && \
+		cd envs/dev/$$module && \
 		rm -rf .terragrunt-cache || true; \
 		terragrunt init -reconfigure && \
 		terragrunt plan || exit 1; \
