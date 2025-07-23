@@ -6,8 +6,6 @@ pipeline {
         TERRAGRUNT_VERSION = '0.27.1'
         TERRAFORM_BIN = "${WORKSPACE}/terraform"
         TERRAGRUNT_BIN = "${WORKSPACE}/terragrunt"
-        MODULES = 'iam-role glue-crawler glue-workflow glue-job-a glue-job-b glue-start-trigger glue-main-trigger'
-        ENV = 'dev' // Change to 'stage' or 'prod' as needed
     }
 
     stages {
@@ -35,22 +33,8 @@ pipeline {
                     echo "Updating PATH to include tools..."
                     export PATH=$WORKSPACE:$PATH
 
-                    echo "Running 'make plan' with ENV=${ENV} and MODULES=${MODULES}"
-                    make plan ENV=${ENV} MODULES="${MODULES}"
-                    '''
-                }
-            }
-        }
-
-        stage('Terragrunt Apply via Makefile') {
-            steps {
-                dir('deploy') {
-                    sh '''
-                    echo "Updating PATH to include tools..."
-                    export PATH=$WORKSPACE:$PATH
-
-                    echo "Running 'make deploy' with ENV=${ENV} and MODULES=${MODULES}"
-                    make deploy ENV=${ENV} MODULES="${MODULES}"
+                    echo "Running 'make plan' in dev environment..."
+                    make plan
                     '''
                 }
             }
