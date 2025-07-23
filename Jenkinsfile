@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    parameters {
+        string(name: 'ENV', defaultValue: 'dev', description: 'Environment to deploy to (e.g., dev, stage, prod)')
+    }
+
     environment {
         TERRAFORM_VERSION = '0.13.6'
         TERRAGRUNT_VERSION = '0.27.1'
@@ -26,15 +30,26 @@ pipeline {
             }
         }
 
-        stage('Terragrunt Plan (All Modules)') {
+        stage('Terragrunt Plan') {
             steps {
                 dir('deploy') {
                     sh '''
-                    echo "Updating PATH to include tools..."
+                    echo "Running 'make plan' for env: $ENV"
                     export PATH=$WORKSPACE:$PATH
-
-                    echo "Running 'make plan' for all modules in dev"
                     make plan
+                    '''
+                }
+            }
+        }
+
+        stage('Terragrunt Apply') {
+            steps {
+                dir('deploy') {
+                    input message: "Do you want to proceed with terragrunt apply?", ok: "Apply"
+                    sh '''
+                    echo "Running 'make deploy' for env: $ENV"
+                    export PATH=$WORKSPACE:$PATH
+                    make deploy
                     '''
                 }
             }
