@@ -2,8 +2,9 @@ pipeline {
     agent any
 
     parameters {
-        string(name: 'ENV', defaultValue: 'dev', description: 'Environment to deploy to (e.g., dev, stage, prod)')
+    choice(name: 'ENV', choices: ['dev', 'stage', 'prod'], description: 'Select environment to deploy to')
     }
+
 
     environment {
         TERRAFORM_VERSION = '0.13.6'
