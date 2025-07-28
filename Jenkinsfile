@@ -1,16 +1,12 @@
 pipeline {
     agent any
 
-    parameters {
-    choice(name: 'ENV', choices: ['dev', 'shared-services', 'prod'], description: 'Select environment to deploy to')
-    }
-
-
     environment {
         TERRAFORM_VERSION = '0.13.6'
         TERRAGRUNT_VERSION = '0.27.1'
         TERRAFORM_BIN = "${WORKSPACE}/terraform"
         TERRAGRUNT_BIN = "${WORKSPACE}/terragrunt"
+        MODULES = 'iam-role glue-crawler glue-workflow glue-job-a glue-job-b glue-start-trigger glue-main-trigger'
     }
 
     stages {
@@ -31,27 +27,49 @@ pipeline {
             }
         }
 
-        stage('Terragrunt Plan') {
+        stage('Terragrunt Plan per Module') {
             steps {
-                dir('deploy') {
-                    sh '''
-                    echo "Running 'make plan' for env: $ENV"
-                    export PATH=$WORKSPACE:$PATH
-                    make plan
-                    '''
+                script {
+                    def modules = env.MODULES.split()
+                    modules.each { module ->
+                        dir("deploy/envs/dev/${module}") {
+                            sh '''
+                            echo "==============================================="
+                            echo "Running Terragrunt plan in $(pwd)..."
+
+                            rm -rf .terragrunt-cache || true
+                            export PATH=$WORKSPACE:$PATH
+
+                            terragrunt init -reconfigure
+                            terragrunt plan
+
+                            echo "==============================================="
+                            '''
+                        }
+                    }
                 }
             }
         }
 
-        stage('Terragrunt Apply') {
+        stage('Terragrunt Apply per Module') {
             steps {
-                dir('deploy') {
-                    input message: "Do you want to proceed with terragrunt apply?", ok: "Apply"
-                    sh '''
-                    echo "Running 'make deploy' for env: $ENV"
-                    export PATH=$WORKSPACE:$PATH
-                    make deploy
-                    '''
+                script {
+                    def modules = env.MODULES.split()
+                    modules.each { module ->
+                        dir("deploy/envs/dev/${module}") {
+                            sh '''
+                            echo "==============================================="
+                            echo "Running Terragrunt apply in $(pwd)..."
+
+                            rm -rf .terragrunt-cache || true
+                            export PATH=$WORKSPACE:$PATH
+
+                            terragrunt apply -auto-approve
+
+                            echo "==============================================="
+                            '''
+                        }
+                    }
                 }
             }
         }

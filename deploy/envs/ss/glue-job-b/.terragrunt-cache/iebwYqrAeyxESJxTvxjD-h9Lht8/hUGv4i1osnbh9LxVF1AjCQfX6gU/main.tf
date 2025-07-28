@@ -51,5 +51,5 @@ resource "aws_glue_job" "this" {
   }
 
   tags       = module.this.tags
-  depends_on = [aws_s3_object.glue_script]
+  depends_on = [aws_s3_object.glue_script]  # 👈 ensure S3 upload happens first
 }

@@ -8,11 +8,11 @@ terraform {
 
 inputs = {
   name              = "titanic-crawler-raw-data"
-  role              = "arn:aws:iam::788386357094:role/jenkins-glue-role"
+  role              = "arn:aws:iam::165446266030:role/jenkins-glue-role"
   database_name     = "titanic_db"
-  s3_target         = [                             
+  s3_target         = [                             # ✅ Correct key and format
     {
-      path = "s3://shared-services-gluestack/sample-data/"
+      path = "s3://vs-glue-test-job/sample-data/"
     }
   ]
   table_prefix      = "raw_"
