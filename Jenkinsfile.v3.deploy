@@ -1,5 +1,6 @@
 #!/usr/bin/env groovy
-@Library('pipelines@0.2.24') _
+// @Library('pipelines@0.2.24') _
+@Library('pipelines') _
 
 def containerName = 'app'
 def ENVIRONMENT
